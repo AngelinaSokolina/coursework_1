@@ -1,0 +1,11 @@
+{
+    "cashback_categories": ["Супермаркеты", "Аптеки", "Кафе"],
+    "currency_rates": {
+        "USD": 90.5,
+        "EUR": 98.3
+    },
+    "stock_prices": {
+        "AAPL": 175.0,
+        "GOOGL": 140.0
+    }
+}
