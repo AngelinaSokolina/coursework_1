@@ -99,17 +99,17 @@ def search_by_person_transfer(data: List[Dict[str, Any]], person_name: str) -> s
     search_clean = person_name.strip().lower()
 
     # Проверка формата ввода: должно быть "имя буква."
-    name_pattern = re.compile(r'^[а-яa-z]+\s+[а-яa-z]\.$', re.IGNORECASE)
+    name_pattern = re.compile(r'^[а-я]+\s+[а-я]\.$', re.IGNORECASE)
 
     if not name_pattern.match(search_clean):
         return "Некорректный ввод. Используйте формат 'Имя Ф.',например, 'Иван С.'"
 
     # Паттерн для поиска в описании: слово на русском или английском + пробел + буква с точкой
-    # [А-Яа-яA-Za-z] - любые буквы русского и английского алфавита
+    # [А-Яа-я] - любые буквы русского алфавита
     # + - одно или более вхождений
-    # [А-ЯA-Z] - одна заглавная буква (русская или английская)
+    # [А-Я] - одна заглавная буква
     # \. - точка
-    person_pattern = re.compile(r'([А-Яа-яA-Za-z]+)\s+([А-ЯA-Z])\.')
+    person_pattern = re.compile(r'([А-Яа-я]+)\s+([А-Я])\.')
 
     result = []
 
@@ -144,23 +144,24 @@ if __name__ == '__main__':
     data = excel_data(Path(__file__).parent.parent / 'data' / 'operations.xlsx')
 
     # ===== Простой поиск ====
-    # search_query = input("Введите слово для поиска: ")
-    # result_json_easy_search = easy_search(data, search_query)
-    #
-    # # Преобразуем JSON обратно в список, чтобы проверить длину
-    # result_list = json.loads(result_json_easy_search)
-    #
-    # if result_list:
-    # # Если True
-    #     print(result_json_easy_search)
-    # # Если False
-    # else:
-    #     print("Операции не обнаружено, попробуйте еще раз")
+    search_query = input("Введите слово для поиска: ")
+    result_json_easy_search = easy_search(data, search_query)
+
+    # Преобразуем JSON обратно в список, чтобы проверить длину
+    result_list = json.loads(result_json_easy_search)
+
+    if result_list:
+    # Если True
+        print(result_json_easy_search)
+    # Если False
+    else:
+        print("Операции не обнаружено, попробуйте еще раз")
 
     # ===== Для поиска по телефонным номерам ====
-    # phone_result = search_by_phone(data, "+7 995 555-55-55")
-    # print(phone_result)
+    phone_result = search_by_phone(data, "+7 995 555-55-55")
+    print(phone_result)
 
     # ===== Для поиска переводов физическим лицам ====
     person_result = search_by_person_transfer(data, "Иван С.")
     print(person_result)
+
