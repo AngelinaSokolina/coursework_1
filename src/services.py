@@ -1,15 +1,15 @@
 import json
 import re
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 import pandas as pd
 
 
 def excel_data(file_path: str | Path) -> list[dict]:
     """Загружает данные из Excel и возвращает список словарей"""
-    df = pd.read_excel(file_path, engine='openpyxl')
-    return df.to_dict('records')
+    df = pd.read_excel(file_path, engine="openpyxl")
+    return df.to_dict("records")
 
 
 def format_date(date_str: str) -> str:
@@ -18,10 +18,10 @@ def format_date(date_str: str) -> str:
         return "Дата не указана"
 
     # Берём только дату (до пробела)
-    if ' ' in str(date_str):
-        date_str = str(date_str).split(' ')[0]
+    if " " in str(date_str):
+        date_str = str(date_str).split(" ")[0]
 
-    parts = re.findall(r'\d+', str(date_str))
+    parts = re.findall(r"\d+", str(date_str))
     if len(parts) == 3:
         if len(parts[0]) == 4:
             return f"{parts[2]}.{parts[1]}.{parts[0]}"
@@ -31,8 +31,8 @@ def format_date(date_str: str) -> str:
 
 
 def easy_search(data: List[Dict[str, Any]], search_str: str) -> str:
-    """ Простой поиск по категории или описанию.
-    Возвращает JSON-строку с отфильтрованными транзакциями """
+    """Простой поиск по категории или описанию.
+    Возвращает JSON-строку с отфильтрованными транзакциями"""
     result = []
     search_lower = search_str.lower()
 
@@ -41,7 +41,9 @@ def easy_search(data: List[Dict[str, Any]], search_str: str) -> str:
         category = "Данные отсутствуют" if pd.isna(category_raw) else str(category_raw)
 
         description_raw = row.get("Описание", "")
-        description = "Данные отсутствуют" if pd.isna(description_raw) else str(description_raw)
+        description = (
+            "Данные отсутствуют" if pd.isna(description_raw) else str(description_raw)
+        )
 
         if search_lower in category.lower() or search_lower in description.lower():
             # Сумма и валюта из соответствующих колонок
@@ -50,13 +52,15 @@ def easy_search(data: List[Dict[str, Any]], search_str: str) -> str:
             currency_raw = row.get("Валюта операции", "RUB")
             currency = str(currency_raw) if not pd.isna(currency_raw) else "RUB"
 
-            result.append({
-                "Дата": format_date(row.get("Дата операции", "")),
-                "Сумма": amount,
-                "Валюта": currency,
-                "Описание": description,
-                "Категория": category
-            })
+            result.append(
+                {
+                    "Дата": format_date(row.get("Дата операции", "")),
+                    "Сумма": amount,
+                    "Валюта": currency,
+                    "Описание": description,
+                    "Категория": category,
+                }
+            )
 
     return json.dumps(result, ensure_ascii=False, indent=2)
 
@@ -65,22 +69,22 @@ def search_by_phone(data: List[Dict[str, Any]], phone_number: str) -> str:
     """Возвращает JSON с транзакциями, содержащими указанный номер телефона (точное совпадение)"""
 
     # Очищаем введённый номер от нецифровых символов
-    phone_clean = re.sub(r'\D', '', phone_number)
+    phone_clean = re.sub(r"\D", "", phone_number)
 
     # Если после очистки нет 11 цифр — номер некорректный
     if len(phone_clean) != 11:
         return f"Некорректный номер: {phone_number}. Должно быть 11 цифр"
 
     # Первая цифра должна быть 7 или 8
-    if phone_clean[0] not in ('7', '8'):
+    if phone_clean[0] not in ("7", "8"):
         return f"Некорректный номер: {phone_number}. Должен начинаться с +7 или 8"
     result = []
 
     for row in data:
-        description = str(row.get('Описание', ''))
+        description = str(row.get("Описание", ""))
 
         # Находим все последовательности из 11 цифр подряд
-        found_numbers = re.sub(r'\D', '', description)
+        found_numbers = re.sub(r"\D", "", description)
 
         # Проверяем, есть ли среди них наш номер
         if phone_clean in found_numbers:
@@ -99,7 +103,7 @@ def search_by_person_transfer(data: List[Dict[str, Any]], person_name: str) -> s
     search_clean = person_name.strip().lower()
 
     # Проверка формата ввода: должно быть "имя буква."
-    name_pattern = re.compile(r'^[а-я]+\s+[а-я]\.$', re.IGNORECASE)
+    name_pattern = re.compile(r"^[а-я]+\s+[а-я]\.$", re.IGNORECASE)
 
     if not name_pattern.match(search_clean):
         return "Некорректный ввод. Используйте формат 'Имя Ф.',например, 'Иван С.'"
@@ -109,18 +113,18 @@ def search_by_person_transfer(data: List[Dict[str, Any]], person_name: str) -> s
     # + - одно или более вхождений
     # [А-Я] - одна заглавная буква
     # \. - точка
-    person_pattern = re.compile(r'([А-Яа-я]+)\s+([А-Я])\.')
+    person_pattern = re.compile(r"([А-Яа-я]+)\s+([А-Я])\.")
 
     result = []
 
     for row in data:
-        category_raw = row.get('Категория', '')
+        category_raw = row.get("Категория", "")
         category = "Данные отсутствуют" if pd.isna(category_raw) else str(category_raw)
 
-        description = str(row.get('Описание', ''))
+        description = str(row.get("Описание", ""))
 
         # Только переводы
-        if category != 'Переводы':
+        if category != "Переводы":
             continue
 
         # Ищем в описании имя и инициал
@@ -132,7 +136,7 @@ def search_by_person_transfer(data: List[Dict[str, Any]], person_name: str) -> s
         full_name = (f"{match.group(1)} {match.group(2)}.").lower()
 
         # Сравниваем с введённой строкой (очищенной)
-        if  full_name == search_clean:
+        if full_name == search_clean:
             result.append(row)
 
     if not result:
@@ -141,14 +145,16 @@ def search_by_person_transfer(data: List[Dict[str, Any]], person_name: str) -> s
     return json.dumps(result, ensure_ascii=False, indent=4)
 
 
-def get_top_cashback_categories(data: List[Dict[str, Any]], top_n: int ) -> List[Dict[str, Any]]:
-    """ Возвращает топ-N категорий по сумме бонусов (кешбэка) """
+def get_top_cashback_categories(
+    data: List[Dict[str, Any]], top_n: int
+) -> List[Dict[str, Any]]:
+    """Возвращает топ-N категорий по сумме бонусов (кешбэка)"""
 
     # Проверка на пустые данные
     if not data:
         return []
 
-    bonuses_by_category = {}
+    bonuses_by_category: dict[str, float] = {}
 
     # Собираем бонусы по категориям
     for row in data:
@@ -192,9 +198,7 @@ def get_top_cashback_categories(data: List[Dict[str, Any]], top_n: int ) -> List
 
     # Сортируем категории по убыванию суммы бонусов
     sorted_categories = sorted(
-        bonuses_by_category.items(),
-        key=lambda x: x[1],
-        reverse=True
+        bonuses_by_category.items(), key=lambda x: x[1], reverse=True
     )
 
     # Печать в столбик
@@ -214,8 +218,8 @@ def get_top_cashback_categories(data: List[Dict[str, Any]], top_n: int ) -> List
     return result
 
 
-if __name__ == '__main__':
-    data = excel_data(Path(__file__).parent.parent / 'data' / 'operations.xlsx')
+if __name__ == "__main__":
+    data = excel_data(Path(__file__).parent.parent / "data" / "operations.xlsx")
 
     # ===== Простой поиск ====
     search_query = input("Введите слово для поиска: ")
@@ -225,7 +229,7 @@ if __name__ == '__main__':
     result_list = json.loads(result_json_easy_search)
 
     if result_list:
-    # Если True
+        # Если True
         print(result_json_easy_search)
     # Если False
     else:
@@ -239,6 +243,6 @@ if __name__ == '__main__':
     person_result = search_by_person_transfer(data, "Иван С.")
     print(person_result)
 
+    # ===== Для поиска категорий повышенного кешбэка ====
     cashback_result = get_top_cashback_categories(data, 5)
     print(cashback_result)
-
