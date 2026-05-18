@@ -140,6 +140,80 @@ def search_by_person_transfer(data: List[Dict[str, Any]], person_name: str) -> s
 
     return json.dumps(result, ensure_ascii=False, indent=4)
 
+
+def get_top_cashback_categories(data: List[Dict[str, Any]], top_n: int ) -> List[Dict[str, Any]]:
+    """ Возвращает топ-N категорий по сумме бонусов (кешбэка) """
+
+    # Проверка на пустые данные
+    if not data:
+        return []
+
+    bonuses_by_category = {}
+
+    # Собираем бонусы по категориям
+    for row in data:
+        # Получаем категорию
+        category_raw = row.get("Категория")
+
+        # Пропускаем, если категории нет
+        if category_raw is None or pd.isna(category_raw):
+            continue
+
+        # Превращаем в строку
+        category = str(category_raw).strip()
+
+        # Пропускаем пустые категории
+        if not category:
+            continue
+
+        # Получаем бонусы
+        bonus_raw = row.get("Бонусы (включая кэшбэк)", 0)
+
+        # Пропускаем, если бонусов нет
+        if bonus_raw is None or pd.isna(bonus_raw):
+            continue
+
+        # Преобразуем в число
+        try:
+            bonus = float(bonus_raw)
+        except (ValueError, TypeError):
+            continue
+
+        # Пропускаем нулевые бонусы
+        if bonus == 0:
+            continue
+
+        # Суммируем бонусы по категориям
+        bonuses_by_category[category] = bonuses_by_category.get(category, 0) + bonus
+
+    # Если нет категорий с бонусами
+    if not bonuses_by_category:
+        return []
+
+    # Сортируем категории по убыванию суммы бонусов
+    sorted_categories = sorted(
+        bonuses_by_category.items(),
+        key=lambda x: x[1],
+        reverse=True
+    )
+
+    # Печать в столбик
+    print(f"\n=== Топ-{top_n} выгодных категорий по кешбэку ===\n")
+
+    for i, (cat, bonus) in enumerate(sorted_categories[:top_n], start=1):
+        print(f"{i}. {cat}: {bonus:.2f} руб.")
+
+    print()
+
+    # Топ-N
+    result = [
+        {"Категория": cat, "Бонусы": round(bonus, 2)}
+        for cat, bonus in sorted_categories[:top_n]
+    ]
+
+    return result
+
+
 if __name__ == '__main__':
     data = excel_data(Path(__file__).parent.parent / 'data' / 'operations.xlsx')
 
@@ -164,4 +238,7 @@ if __name__ == '__main__':
     # ===== Для поиска переводов физическим лицам ====
     person_result = search_by_person_transfer(data, "Иван С.")
     print(person_result)
+
+    cashback_result = get_top_cashback_categories(data, 5)
+    print(cashback_result)
 
