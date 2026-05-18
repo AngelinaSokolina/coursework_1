@@ -77,7 +77,7 @@ def main() -> None:
     """Главная функция"""
 
     print(
-        f"{get_greeting()}! Добро пожаловать в программу анализа банковских транзакций.\n"
+        f"{get_greeting()}! \nДобро пожаловать в программу анализа банковских транзакций.\n"
     )
 
     data = excel_data(Path(__file__).parent.parent / "data" / "operations.xlsx")
