@@ -1,18 +1,13 @@
 import json
-from pathlib import Path
 from datetime import datetime
-from typing import List, Dict, Any
+from pathlib import Path
+from typing import Any, Dict, List
 
 import pandas as pd
 
-from src.services import (
-    excel_data,
-    easy_search,
-    search_by_phone,
-    search_by_person_transfer,
-    get_top_cashback_categories,
-    format_date
-)
+from src.services import (easy_search, excel_data, format_date,
+                          get_top_cashback_categories,
+                          search_by_person_transfer, search_by_phone)
 
 
 def get_greeting() -> str:
@@ -29,7 +24,7 @@ def get_greeting() -> str:
 
 
 def display_card_info(data: List[Dict[str, Any]]) -> None:
-    """ Выводит информацию о картах из транзакций: группирует по номеру карты, суммирует операции """
+    """Выводит информацию о картах из транзакций: группирует по номеру карты, суммирует операции"""
     cards_info = {}
 
     for row in data:
@@ -46,7 +41,7 @@ def display_card_info(data: List[Dict[str, Any]]) -> None:
         if card_number not in cards_info:
             cards_info[card_number] = {
                 "total": 0,
-                "currency": row.get("Валюта операции", "RUB")
+                "currency": row.get("Валюта операции", "RUB"),
             }
         cards_info[card_number]["total"] += amount
 
@@ -61,7 +56,9 @@ def display_card_info(data: List[Dict[str, Any]]) -> None:
 
 def display_top_transactions(data: List[Dict[str, Any]], limit: int = 5) -> None:
     """Выводит топ-5 транзакций, отсортированных по убыванию суммы"""
-    sorted_data = sorted(data, key=lambda x: float(x.get("Сумма операции", 0)), reverse=True)
+    sorted_data = sorted(
+        data, key=lambda x: float(x.get("Сумма операции", 0)), reverse=True
+    )
 
     print(f"\nТоп-{limit} транзакций \n")
 
@@ -71,13 +68,17 @@ def display_top_transactions(data: List[Dict[str, Any]], limit: int = 5) -> None
         description = row.get("Описание", "Без описания")
         date_raw = row.get("Дата операции", "")
 
-        print(f"{i}. {format_date(date_raw)} | {amount:} руб. | {category} | {description[:50]}")
+        print(
+            f"{i}. {format_date(date_raw)} | {amount:} руб. | {category} | {description[:50]}"
+        )
 
 
 def main() -> None:
     """Главная функция"""
 
-    print(f"{get_greeting()}! Добро пожаловать в программу анализа банковских транзакций.\n")
+    print(
+        f"{get_greeting()}! Добро пожаловать в программу анализа банковских транзакций.\n"
+    )
 
     data = excel_data(Path(__file__).parent.parent / "data" / "operations.xlsx")
 
